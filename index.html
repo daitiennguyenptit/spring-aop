@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring AOP Handbook</title>
+<meta name="description" content="Tổng hợp kiến thức Spring AOP theo bài toán thực tế, mỗi bài toán kèm một module demo chạy được.">
+<style>
+:root {
+  --bg: #fbfaf7; --surface: #ffffff; --surface-2: #f3f1ec; --text: #1f2328; --muted: #5d6470;
+  --border: #e3e0d8; --accent: #2f6f4f; --accent-soft: #e4f1ea; --warn: #9a5b00; --warn-soft: #fdf1dc;
+  --danger: #a33a2b; --danger-soft: #fbe7e3; --info: #2b5c9a; --info-soft: #e3edf9;
+  --code-bg: #f5f3ee; --code-text: #2a2f36; --kw: #8a3ab9; --str: #2f6f4f; --cm: #8a8f98; --an: #b05a00;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171a; --surface: #1c1f23; --surface-2: #23272c; --text: #e6e7e9; --muted: #9aa1ab;
+    --border: #30353c; --accent: #6fcf97; --accent-soft: #1d3328; --warn: #f0b45a; --warn-soft: #3a2d17;
+    --danger: #f08a7a; --danger-soft: #3b211d; --info: #8ab4f0; --info-soft: #1c2a3d;
+    --code-bg: #111316; --code-text: #d7dae0; --kw: #c792ea; --str: #8fd3a8; --cm: #6c737d; --an: #f2a65a;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171a; --surface: #1c1f23; --surface-2: #23272c; --text: #e6e7e9; --muted: #9aa1ab;
+  --border: #30353c; --accent: #6fcf97; --accent-soft: #1d3328; --warn: #f0b45a; --warn-soft: #3a2d17;
+  --danger: #f08a7a; --danger-soft: #3b211d; --info: #8ab4f0; --info-soft: #1c2a3d;
+  --code-bg: #111316; --code-text: #d7dae0; --kw: #c792ea; --str: #8fd3a8; --cm: #6c737d; --an: #f2a65a;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); }
+code, pre, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: .88em; }
+:not(pre) > code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; }
+pre {
+  background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; overflow-x: auto; line-height: 1.5; margin: 12px 0 18px;
+}
+pre .k { color: var(--kw); } pre .s { color: var(--str); } pre .c { color: var(--cm); font-style: italic; } pre .a { color: var(--an); }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); max-width: 1240px; margin: 0 auto; }
+nav.toc {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+  padding: 28px 18px 28px 24px; border-right: 1px solid var(--border); font-size: 14px;
+}
+nav.toc .brand { font-weight: 700; font-size: 15px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+nav.toc ol { list-style: none; padding: 0; margin: 0; }
+nav.toc li { margin: 2px 0; }
+nav.toc a { color: var(--muted); text-decoration: none; display: block; padding: 3px 8px; border-radius: 6px; }
+nav.toc a:hover { color: var(--text); background: var(--surface-2); }
+nav.toc .sub a { padding-left: 22px; font-size: 13px; }
+nav.toc .star a { color: var(--accent); font-weight: 600; }
+.theme-btn { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 12px; }
+main { padding: 32px 40px 80px; min-width: 0; }
+header.hero { padding: 8px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+header.hero h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -.01em; }
+header.hero p { color: var(--muted); margin: 0; max-width: 760px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.chip { font-size: 12.5px; border: 1px solid var(--border); background: var(--surface); padding: 3px 10px; border-radius: 999px; color: var(--muted); }
+section { padding-top: 28px; }
+h2 { font-size: 25px; margin: 18px 0 10px; letter-spacing: -.01em; }
+h3 { font-size: 19px; margin: 26px 0 8px; }
+h4 { font-size: 16px; margin: 20px 0 6px; }
+p, li { max-width: 860px; }
+.muted { color: var(--muted); }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; border: 1px solid var(--border); background: var(--surface); }
+.callout.tip { background: var(--accent-soft); border-color: transparent; }
+.callout.warn { background: var(--warn-soft); border-color: transparent; }
+.callout.danger { background: var(--danger-soft); border-color: transparent; }
+.callout.info { background: var(--info-soft); border-color: transparent; }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.table-wrap { overflow-x: auto; margin: 12px 0 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin: 14px 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: var(--shadow); }
+.card h4 { margin: 0 0 6px; }
+.card p { margin: 0 0 10px; font-size: 14.5px; color: var(--muted); }
+.card .meta { font-size: 13px; }
+.card.featured { border-color: var(--accent); }
+.badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-right: 6px; vertical-align: middle; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.cols > div { min-width: 0; }
+.label { font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 6px; }
+.label.bad { color: var(--danger); } .label.good { color: var(--accent); }
+figure { margin: 16px 0 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+svg text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; fill: var(--text); }
+svg .box { fill: var(--surface-2); stroke: var(--border); }
+svg .box-accent { fill: var(--accent-soft); stroke: var(--accent); }
+svg .box-info { fill: var(--info-soft); stroke: var(--info); }
+svg .box-warn { fill: var(--warn-soft); stroke: var(--warn); }
+svg .line { stroke: var(--muted); fill: none; stroke-width: 1.5; }
+svg .line-accent { stroke: var(--accent); fill: none; stroke-width: 1.8; }
+svg .small { font-size: 11.5px; fill: var(--muted); }
+svg .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; }
+svg .arrow { fill: var(--muted); } svg .arrow-accent { fill: var(--accent); }
+ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+ol.steps > li { counter-increment: step; position: relative; padding-left: 38px; margin: 10px 0; }
+ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; margin: 10px 0; }
+details summary { cursor: pointer; font-weight: 600; }
+.path { font-size: 13px; color: var(--muted); margin: 14px 0 -6px; }
+.path code { background: none; padding: 0; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13.5px; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; }
+  nav.toc ol { columns: 2; column-gap: 12px; }
+  main { padding: 20px 16px 60px; }
+  .cols { grid-template-columns: 1fr; }
+  header.hero h1 { font-size: 27px; }
+}
+@media (max-width: 520px) { nav.toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Mục lục">
+  <div class="brand"><span>Spring AOP Handbook</span><button class="theme-btn" id="themeBtn" type="button">Giao diện</button></div>
+  <ol>
+    <li><a href="#muc-dich">1. Mục đích của AOP</a></li>
+    <li><a href="#thuat-ngu">2. Thuật ngữ cốt lõi</a></li>
+    <li><a href="#co-che">3. Cơ chế proxy</a></li>
+    <li><a href="#advice">4. Các loại advice</a></li>
+    <li><a href="#pointcut">5. Pointcut</a></li>
+    <li><a href="#bai-toan">6. Bài toán và demo</a></li>
+    <li class="sub star"><a href="#audit">6.1 Audit log + requestId</a></li>
+    <li class="sub"><a href="#perf">6.2 Đo hiệu năng</a></li>
+    <li class="sub"><a href="#retry">6.3 Retry tự động</a></li>
+    <li class="sub"><a href="#authz">6.4 Phân quyền</a></li>
+    <li class="sub"><a href="#pitfalls">6.5 Lỗi thường gặp</a></li>
+    <li><a href="#thu-tu">7. Thứ tự aspect</a></li>
+    <li><a href="#best">8. Best practice</a></li>
+    <li><a href="#aspectj">9. Spring AOP vs AspectJ</a></li>
+    <li><a href="#chay">10. Chạy project</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Spring AOP qua bài toán thực tế</h1>
+  <p>Tài liệu tổng hợp kiến thức Spring AOP: hiểu AOP dùng để giải quyết vấn đề gì, nó hoạt động ra sao, và áp dụng thế nào trong các bài toán thật. Mỗi bài toán có một module demo chạy được, kèm test kiểm chứng ngay trong project này.</p>
+  <div class="chips">
+    <span class="chip">Spring Boot 3.3.5</span><span class="chip">Java 21</span><span class="chip">Maven multi-module</span><span class="chip">6 module demo</span><span class="chip">26 test</span>
+  </div>
+</header>
+
+<!-- 1 -->
+<section id="muc-dich">
+<h2>1. Mục đích của Spring AOP</h2>
+<p><strong>AOP (Aspect-Oriented Programming)</strong> giải quyết các <strong>cross-cutting concern</strong>, tức những mối quan tâm "cắt ngang" nhiều tầng và nhiều class nhưng không thuộc nghiệp vụ chính: ghi log, audit, đo thời gian, phân quyền, transaction, retry, cache…</p>
+<p>Nếu không có AOP, các đoạn code này gây ra hai vấn đề:</p>
+<ul>
+  <li><strong>Code tangling (rối):</strong> trong một method, logic nghiệp vụ bị trộn lẫn với log, đo thời gian, kiểm quyền.</li>
+  <li><strong>Code scattering (rải rác):</strong> cùng một đoạn code log/audit bị lặp lại ở hàng trăm method. Khi cần sửa format thì phải sửa ở hàng trăm chỗ, và rất dễ sót.</li>
+</ul>
+<div class="cols">
+  <div>
+    <div class="label bad">Không dùng AOP</div>
+<pre><span class="k">public</span> String transfer(String requestId, String from,
+                       String to, BigDecimal amount) {
+    <span class="k">long</span> start = System.nanoTime();
+    <span class="k">if</span> (!user.hasRole(<span class="s">"TELLER"</span>)) <span class="k">throw</span> ...;
+    log.info(<span class="s">"[{}] TRANSFER start {}"</span>, requestId, from);
+    <span class="k">try</span> {
+        accountService.debit(requestId, from, amount);
+        accountService.credit(requestId, to, amount);
+        auditRepo.save(requestId, <span class="s">"TRANSFER"</span>, <span class="s">"OK"</span>);
+        <span class="k">return</span> <span class="s">"OK"</span>;
+    } <span class="k">catch</span> (Exception e) {
+        auditRepo.save(requestId, <span class="s">"TRANSFER"</span>, <span class="s">"FAIL"</span>);
+        <span class="k">throw</span> e;
+    } <span class="k">finally</span> {
+        metrics.record(System.nanoTime() - start);
+    }
+}</pre>
+  </div>
+  <div>
+    <div class="label good">Dùng AOP</div>
+<pre><span class="a">@RequiresRole</span>(<span class="s">"TELLER"</span>)
+<span class="a">@Audited</span>(action = <span class="s">"TRANSFER"</span>)
+<span class="k">public</span> String transfer(String from, String to,
+                       BigDecimal amount) {
+    accountService.debit(from, amount);
+    accountService.credit(to, amount);
+    <span class="k">return</span> <span class="s">"OK"</span>;
+}
+<span class="c">// Log, audit, metrics, phân quyền nằm trong
+// các Aspect riêng, viết MỘT lần và áp dụng
+// cho mọi method bằng annotation/pointcut.
+// requestId không còn trong tham số.</span></pre>
+  </div>
+</div>
+<div class="callout tip"><strong>Tóm lại</strong>AOP giúp tách "làm gì" (nghiệp vụ) khỏi "làm thế nào cho an toàn và quan sát được" (hạ tầng). Code nghiệp vụ gọn hơn, concern được quản lý tập trung, dễ bật/tắt và dễ test.</div>
+<p>Thật ra bạn đã dùng Spring AOP hằng ngày mà không để ý: <code>@Transactional</code>, <code>@Cacheable</code>, <code>@Async</code>, <code>@PreAuthorize</code>, <code>@Retryable</code> đều được cài đặt bằng proxy AOP.</p>
+</section>
+
+<!-- 2 -->
+<section id="thuat-ngu">
+<h2>2. Thuật ngữ cốt lõi</h2>
+<div class="table-wrap"><table>
+<tr><th>Thuật ngữ</th><th>Ý nghĩa</th><th>Ví dụ trong project</th></tr>
+<tr><td><strong>Aspect</strong></td><td>Module chứa một cross-cutting concern (gồm pointcut + advice).</td><td><code>AuditAspect</code>, <code>RetryAspect</code></td></tr>
+<tr><td><strong>Join point</strong></td><td>Điểm trong lúc chương trình chạy có thể chèn logic. Với Spring AOP, join point <em>luôn là lời gọi method</em> trên bean.</td><td>Lời gọi <code>TransferService.transfer(..)</code></td></tr>
+<tr><td><strong>Pointcut</strong></td><td>Biểu thức chọn ra những join point cần áp dụng.</td><td><code>@annotation(audited)</code></td></tr>
+<tr><td><strong>Advice</strong></td><td>Đoạn code chạy tại join point (before / after / around…).</td><td>Method <code>audit(ProceedingJoinPoint, Audited)</code></td></tr>
+<tr><td><strong>Target</strong></td><td>Object gốc chứa nghiệp vụ, bị proxy bao lại.</td><td>Instance thật của <code>AccountService</code></td></tr>
+<tr><td><strong>Proxy</strong></td><td>Object do Spring tạo ra, đứng trước target để chạy chuỗi advice. Bean được inject chính là proxy.</td><td><code>AccountService$$SpringCGLIB$$0</code></td></tr>
+<tr><td><strong>Weaving</strong></td><td>Quá trình "dệt" aspect vào target. Spring AOP weave ở <em>runtime</em> khi tạo bean; AspectJ có thể weave lúc compile hoặc load-time.</td><td><code>AnnotationAwareAspectJAutoProxyCreator</code></td></tr>
+</table></div>
+</section>
+
+<!-- 3 -->
+<section id="co-che">
+<h2>3. Cơ chế hoạt động: Proxy</h2>
+<p>Khi khởi động, một <code>BeanPostProcessor</code> (<code>AnnotationAwareAspectJAutoProxyCreator</code>) duyệt qua từng bean. Nếu bean nào có method khớp với pointcut của một aspect, Spring <strong>không đăng ký bean gốc</strong> mà đăng ký một <strong>proxy</strong> bao quanh nó. Mọi lời gọi từ bên ngoài đi qua proxy, chạy chuỗi advice (interceptor chain), rồi mới tới target.</p>
+<figure>
+<svg viewBox="0 0 760 210" role="img" aria-label="Luồng gọi qua proxy">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow-accent" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+  <rect class="box" x="10" y="70" width="120" height="56" rx="8"/>
+  <text x="70" y="94" text-anchor="middle" font-weight="600">Caller</text>
+  <text x="70" y="112" text-anchor="middle" class="small">Controller</text>
+
+  <rect class="box-accent" x="170" y="20" width="420" height="160" rx="10" stroke-dasharray="5 4"/>
+  <text x="185" y="40" font-weight="600">Proxy (CGLIB / JDK)</text>
+  <rect class="box-info" x="190" y="62" width="110" height="50" rx="7"/>
+  <text x="245" y="84" text-anchor="middle" font-size="12.5" font-weight="600">Authz</text>
+  <text x="245" y="100" text-anchor="middle" class="small">@Before</text>
+  <rect class="box-info" x="320" y="62" width="110" height="50" rx="7"/>
+  <text x="375" y="84" text-anchor="middle" font-size="12.5" font-weight="600">Audit</text>
+  <text x="375" y="100" text-anchor="middle" class="small">@Around</text>
+  <rect class="box-info" x="450" y="62" width="120" height="50" rx="7"/>
+  <text x="510" y="84" text-anchor="middle" font-size="12.5" font-weight="600">Transaction</text>
+  <text x="510" y="100" text-anchor="middle" class="small">@Around</text>
+  <text x="380" y="150" text-anchor="middle" class="small">interceptor chain, sắp xếp theo @Order (số nhỏ = chạy trước, bọc ngoài)</text>
+
+  <rect class="box-warn" x="630" y="70" width="120" height="56" rx="8"/>
+  <text x="690" y="94" text-anchor="middle" font-weight="600">Target</text>
+  <text x="690" y="112" text-anchor="middle" class="small">code nghiệp vụ</text>
+
+  <path class="line-accent" d="M130 98 L186 98" marker-end="url(#ara)"/>
+  <path class="line" d="M300 87 L316 87" marker-end="url(#ar)"/>
+  <path class="line" d="M430 87 L446 87" marker-end="url(#ar)"/>
+  <path class="line-accent" d="M570 98 L626 98" marker-end="url(#ara)"/>
+</svg>
+<figcaption>Bean được inject vào Controller là proxy. Lời gọi đi qua lần lượt các advice, rồi tới target, và đi ngược lại theo chiều trả về.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<tr><th></th><th>JDK Dynamic Proxy</th><th>CGLIB Proxy</th></tr>
+<tr><td>Cách tạo</td><td>Implement cùng interface với target</td><td>Tạo subclass của target class</td></tr>
+<tr><td>Yêu cầu</td><td>Target phải có interface</td><td>Class/method không được <code>final</code></td></tr>
+<tr><td>Mặc định</td><td>Spring Framework thuần, khi target có interface</td><td><strong>Spring Boot 2+ mặc định</strong> (<code>spring.aop.proxy-target-class=true</code>)</td></tr>
+<tr><td>Intercept được</td><td>Method public của interface</td><td>Method public/protected/package (không final, không private)</td></tr>
+</table></div>
+<p class="muted">Demo: <a href="01-aop-basics/src/test/java/com/example/aop/basics/TracingAspectTest.java"><code>TracingAspectTest.beanDuocInjectLaCglibProxy</code></a> kiểm tra bằng <code>AopUtils.isCglibProxy(..)</code>.</p>
+</section>
+
+<!-- 4 -->
+<section id="advice">
+<h2>4. Các loại advice và thứ tự chạy</h2>
+<div class="table-wrap"><table>
+<tr><th>Advice</th><th>Chạy khi nào</th><th>Dùng cho</th></tr>
+<tr><td><code>@Before</code></td><td>Trước method. Muốn chặn thì ném exception.</td><td>Kiểm quyền, validate</td></tr>
+<tr><td><code>@AfterReturning</code></td><td>Sau khi method trả về thành công, đọc được kết quả.</td><td>Log kết quả, publish event</td></tr>
+<tr><td><code>@AfterThrowing</code></td><td>Khi method ném exception.</td><td>Log lỗi, chuyển đổi exception</td></tr>
+<tr><td><code>@After</code></td><td>Luôn chạy, giống <code>finally</code>.</td><td>Dọn dẹp tài nguyên</td></tr>
+<tr><td><code>@Around</code></td><td>Bao trọn method. Tự quyết định gọi <code>proceed()</code> 0, 1 hay nhiều lần, có thể đổi tham số hoặc kết quả.</td><td>Audit, đo thời gian, retry, cache</td></tr>
+</table></div>
+<p>Thứ tự trong <strong>cùng một aspect</strong> (Spring ≥ 5.2.7), đã được kiểm chứng bằng test:</p>
+<pre>Thành công: around-before → before → [method] → afterReturning → after → around-after
+Có lỗi:     around-before → before → [method] → afterThrowing  → after → around-after</pre>
+<p class="path">Demo: <code>01-aop-basics/…/aspect/TracingAspect.java</code></p>
+<pre><span class="a">@Around</span>(<span class="s">"com.example.aop.basics.aspect.Pointcuts.placeOrder()"</span>)
+<span class="k">public</span> Object around(ProceedingJoinPoint pjp) <span class="k">throws</span> Throwable {
+    trace.add(<span class="s">"around-before"</span>);
+    <span class="k">try</span> {
+        <span class="k">return</span> pjp.proceed();          <span class="c">// gọi tiếp chuỗi advice / target</span>
+    } <span class="k">finally</span> {
+        trace.add(<span class="s">"around-after"</span>);
+    }
+}
+
+<span class="a">@AfterReturning</span>(pointcut = <span class="s">"...placeOrder()"</span>, returning = <span class="s">"result"</span>)
+<span class="k">public void</span> afterReturning(Object result) { trace.add(<span class="s">"afterReturning:"</span> + result); }</pre>
+<div class="callout info"><strong>Quy tắc chọn advice</strong>Hãy chọn loại advice "yếu" nhất đủ dùng. <code>@Around</code> mạnh nhất nhưng dễ gây lỗi: quên <code>return pjp.proceed()</code> thì method trả về <code>null</code>, còn nuốt exception thì làm hỏng luồng nghiệp vụ.</div>
+</section>
+
+<!-- 5 -->
+<section id="pointcut">
+<h2>5. Pointcut expression: cheatsheet</h2>
+<div class="table-wrap"><table>
+<tr><th>Biểu thức</th><th>Ý nghĩa</th></tr>
+<tr><td><code>execution(public * com.app.service..*(..))</code></td><td>Mọi method public trong package <code>service</code> và các package con</td></tr>
+<tr><td><code>execution(* *..OrderService.placeOrder(String, int))</code></td><td>Đúng method, đúng kiểu tham số</td></tr>
+<tr><td><code>within(com.app.service..*)</code></td><td>Mọi join point trong các class thuộc package</td></tr>
+<tr><td><code>within(@org.springframework.stereotype.Service *)</code></td><td>Mọi method của class có <code>@Service</code></td></tr>
+<tr><td><code>@annotation(com.app.Audited)</code></td><td>Method có annotation <code>@Audited</code></td></tr>
+<tr><td><code>@annotation(audited)</code></td><td>Như trên, nhưng <strong>bind</strong> annotation vào tham số advice để đọc thuộc tính</td></tr>
+<tr><td><code>@within(com.app.RequiresRole)</code></td><td>Class có annotation (áp dụng cho mọi method của class)</td></tr>
+<tr><td><code>args(sku, quantity)</code></td><td>Khớp theo kiểu tham số lúc runtime và bind giá trị</td></tr>
+<tr><td><code>bean(*Service)</code></td><td>Theo tên bean (chỉ có trong Spring AOP)</td></tr>
+<tr><td><code>a() &amp;&amp; !b()</code>, <code>||</code></td><td>Kết hợp các pointcut</td></tr>
+</table></div>
+<p>Nên gom pointcut vào một class riêng để tái sử dụng (demo: <a href="01-aop-basics/src/main/java/com/example/aop/basics/aspect/Pointcuts.java"><code>Pointcuts.java</code></a>). Trong code ứng dụng, <strong>pointcut theo annotation</strong> là lựa chọn an toàn nhất: rõ ràng, chủ động, và không vô tình áp dụng cho method mới thêm.</p>
+</section>
+
+<!-- 6 -->
+<section id="bai-toan">
+<h2>6. Bài toán thực tế và project demo</h2>
+<p>Mỗi bài toán là một module Maven độc lập trong project này, gồm code, test kiểm chứng và lệnh chạy.</p>
+<div class="grid">
+  <div class="card featured"><h4><span class="badge">Trọng tâm</span>Audit log + requestId</h4><p>Mọi hàm nghiệp vụ được audit và gắn requestId mà không phải truyền requestId qua tham số, kể cả trong @Async.</p><div class="meta"><a href="#audit">Xem chi tiết</a> · <code>02-audit-requestid</code></div></div>
+  <div class="card"><h4>Cơ bản: advice và proxy</h4><p>Đủ 5 loại advice, thứ tự chạy, binding tham số, kiểm tra proxy.</p><div class="meta"><a href="#advice">Xem chi tiết</a> · <code>01-aop-basics</code></div></div>
+  <div class="card"><h4>Đo hiệu năng</h4><p>Đo thời gian mọi method @Service, cảnh báo method chậm, thống kê theo method.</p><div class="meta"><a href="#perf">Xem chi tiết</a> · <code>03-performance-monitoring</code></div></div>
+  <div class="card"><h4>Retry tự động</h4><p>Retry lỗi tạm thời khi gọi hệ thống ngoài, có exponential backoff, không retry lỗi nghiệp vụ.</p><div class="meta"><a href="#retry">Xem chi tiết</a> · <code>04-retry</code></div></div>
+  <div class="card"><h4>Phân quyền bằng annotation</h4><p>Đặt <code>@RequiresRole</code> trên method hoặc class, trả 401/403 thay cho if/else rải rác.</p><div class="meta"><a href="#authz">Xem chi tiết</a> · <code>05-authorization</code></div></div>
+  <div class="card"><h4>Lỗi thường gặp</h4><p>Self-invocation, method final, object tạo bằng <code>new</code>, và 3 cách sửa.</p><div class="meta"><a href="#pitfalls">Xem chi tiết</a> · <code>06-pitfalls</code></div></div>
+</div>
+
+<!-- 6.1 -->
+<section id="audit">
+<h3>6.1 Bài toán trọng tâm: ghi audit log cho từng hàm, có requestId, không cần truyền vào tham số</h3>
+
+<h4>Đề bài</h4>
+<p>Hệ thống ngân hàng yêu cầu mọi thao tác nghiệp vụ (xem số dư, ghi nợ, ghi có, chuyển tiền, gửi thông báo) phải có bản ghi audit gồm: <em>requestId, hành động, method, tham số (đã che dữ liệu nhạy cảm), kết quả hoặc lỗi, thời gian xử lý, thread</em>. Mọi bản ghi sinh ra từ <strong>cùng một request</strong> phải có <strong>cùng requestId</strong>, để khi khách hàng khiếu nại thì tra được toàn bộ chuỗi thao tác.</p>
+<div class="callout danger"><strong>Cách làm "ngây thơ" và vì sao nó tệ</strong>Thêm tham số <code>String requestId</code> vào mọi method rồi truyền tay từ Controller xuống Service, Repository, Client. Kết quả là chữ ký hàm bị ô nhiễm bởi hạ tầng, phải sửa hàng trăm method, dễ truyền sai hoặc quên, và thư viện bên thứ ba không thể nhận thêm tham số. Thêm vào đó, code audit vẫn bị lặp ở mọi hàm.</div>
+
+<h4>Ý tưởng giải pháp</h4>
+<ol class="steps">
+  <li><strong>Một điểm vào duy nhất</strong> (<code>RequestIdFilter</code>) nhận header <code>X-Request-Id</code> từ gateway hoặc tự sinh UUID, sau đó lưu vào <strong>ThreadLocal</strong> và <strong>MDC</strong>.</li>
+  <li><strong>Context gắn với thread</strong> (<code>RequestContext</code>): ở bất kỳ tầng nào, chỉ cần gọi <code>RequestContext.getRequestId()</code>. Vì Servlet xử lý mỗi request trên một thread, giá trị này "đi theo" request mà không cần truyền.</li>
+  <li><strong>Annotation khai báo</strong> (<code>@Audited(action = "...")</code>) đánh dấu hàm cần audit, kèm <code>@Sensitive</code> trên tham số nhạy cảm.</li>
+  <li><strong>Aspect <code>@Around</code></strong> (<code>AuditAspect</code>) đọc requestId từ context, đo thời gian, ghi bản ghi SUCCESS hoặc FAILURE, rồi <strong>ném lại</strong> exception.</li>
+  <li><strong>Truyền context sang thread khác</strong> (<code>TaskDecorator</code>) để <code>@Async</code> vẫn giữ đúng requestId.</li>
+  <li><strong>Dọn dẹp</strong> trong <code>finally</code>, vì thread của Tomcat được tái sử dụng. Quên bước này thì requestId sẽ rò sang request khác.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 760 330" role="img" aria-label="Luồng requestId qua filter, context và aspect">
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ara2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow-accent" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+  <!-- lane: thread -->
+  <rect class="box" x="10" y="10" width="740" height="200" rx="10" fill-opacity=".35"/>
+  <text x="24" y="30" class="small">Thread http-nio-exec-3 (một request)</text>
+
+  <rect class="box-info" x="24" y="50" width="130" height="62" rx="8"/>
+  <text x="89" y="74" text-anchor="middle" font-weight="600" font-size="13">RequestIdFilter</text>
+  <text x="89" y="92" text-anchor="middle" class="small">đọc/sinh X-Request-Id</text>
+
+  <rect class="box" x="184" y="50" width="110" height="62" rx="8"/>
+  <text x="239" y="74" text-anchor="middle" font-weight="600" font-size="13">Controller</text>
+  <text x="239" y="92" text-anchor="middle" class="small">không biết requestId</text>
+
+  <rect class="box-warn" x="324" y="50" width="150" height="62" rx="8"/>
+  <text x="399" y="72" text-anchor="middle" font-weight="600" font-size="13">TransferService</text>
+  <text x="399" y="90" text-anchor="middle" class="small mono">@Audited TRANSFER</text>
+  <text x="399" y="104" text-anchor="middle" class="small">debit() / credit()</text>
+
+  <rect class="box-accent" x="504" y="50" width="120" height="62" rx="8"/>
+  <text x="564" y="76" text-anchor="middle" font-weight="600" font-size="13">AuditAspect</text>
+  <text x="564" y="94" text-anchor="middle" class="small">@Around</text>
+
+  <rect class="box" x="644" y="50" width="96" height="62" rx="8"/>
+  <text x="692" y="76" text-anchor="middle" font-weight="600" font-size="13">AuditStore</text>
+  <text x="692" y="94" text-anchor="middle" class="small">DB / Kafka</text>
+
+  <path class="line" d="M154 81 L180 81" marker-end="url(#ar2)"/>
+  <path class="line" d="M294 81 L320 81" marker-end="url(#ar2)"/>
+  <path class="line" d="M624 81 L640 81" marker-end="url(#ar2)"/>
+  <path class="line" d="M474 72 L500 72" marker-end="url(#ar2)"/>
+
+  <!-- context bar -->
+  <rect class="box-accent" x="24" y="146" width="600" height="44" rx="8"/>
+  <text x="324" y="166" text-anchor="middle" font-weight="600" font-size="13">RequestContext (ThreadLocal) + MDC: requestId = "demo-001"</text>
+  <text x="324" y="182" text-anchor="middle" class="small">set() ở filter · get() ở aspect · clear() trong finally</text>
+  <path class="line-accent" d="M89 112 L89 142" marker-end="url(#ara2)"/>
+  <text x="96" y="132" class="small">set</text>
+  <path class="line-accent" d="M564 142 L564 116" marker-end="url(#ara2)"/>
+  <text x="571" y="132" class="small">get</text>
+
+  <!-- async thread -->
+  <rect class="box" x="10" y="232" width="740" height="88" rx="10" fill-opacity=".35"/>
+  <text x="24" y="252" class="small">Thread async-1 (@Async)</text>
+  <rect class="box-info" x="324" y="262" width="150" height="46" rx="8"/>
+  <text x="399" y="282" text-anchor="middle" font-weight="600" font-size="13">TaskDecorator</text>
+  <text x="399" y="298" text-anchor="middle" class="small">copy requestId + MDC</text>
+  <rect class="box-warn" x="504" y="262" width="236" height="46" rx="8"/>
+  <text x="622" y="282" text-anchor="middle" font-weight="600" font-size="13">NotificationService</text>
+  <text x="622" y="298" text-anchor="middle" class="small mono">@Async @Audited NOTIFY</text>
+  <path class="line-accent" d="M399 190 L399 258" marker-end="url(#ara2)" stroke-dasharray="4 3"/>
+  <text x="406" y="226" class="small">chụp context trên thread gọi</text>
+  <path class="line" d="M474 285 L500 285" marker-end="url(#ar2)"/>
+</svg>
+<figcaption>Không method nghiệp vụ nào nhận requestId. Filter đặt requestId vào context của thread, aspect đọc ra, và TaskDecorator mang nó sang thread async.</figcaption>
+</figure>
+
+<h4>Bước 1: Context theo thread</h4>
+<p class="path"><code>02-audit-requestid/src/main/java/com/example/aop/audit/context/RequestContext.java</code></p>
+<pre><span class="k">public final class</span> RequestContext {
+    <span class="k">public static final</span> String REQUEST_ID = <span class="s">"requestId"</span>;
+    <span class="k">private static final</span> ThreadLocal&lt;String&gt; HOLDER = <span class="k">new</span> ThreadLocal&lt;&gt;();
+
+    <span class="k">public static void</span> setRequestId(String id) { HOLDER.set(id); MDC.put(REQUEST_ID, id); }
+    <span class="k">public static</span> String getRequestId()         { <span class="k">return</span> HOLDER.get(); }
+    <span class="k">public static void</span> clear()                  { HOLDER.remove(); MDC.remove(REQUEST_ID); }
+
+    <span class="c">// Entry point không phải HTTP (scheduled job, Kafka consumer...)</span>
+    <span class="k">public static</span> &lt;T&gt; T callWithRequestId(String id, Supplier&lt;T&gt; action) { ... }
+}</pre>
+
+<h4>Bước 2: Filter là điểm duy nhất tạo requestId</h4>
+<p class="path"><code>02-audit-requestid/…/web/RequestIdFilter.java</code></p>
+<pre><span class="a">@Component</span>
+<span class="a">@Order</span>(Ordered.HIGHEST_PRECEDENCE)
+<span class="k">public class</span> RequestIdFilter <span class="k">extends</span> OncePerRequestFilter {
+    <span class="k">public static final</span> String HEADER = <span class="s">"X-Request-Id"</span>;
+    <span class="k">private static final</span> Pattern SAFE_ID = Pattern.compile(<span class="s">"^[A-Za-z0-9._-]{1,64}$"</span>);
+
+    <span class="a">@Override</span>
+    <span class="k">protected void</span> doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) ... {
+        String requestId = resolveRequestId(req.getHeader(HEADER));  <span class="c">// validate: chống log injection</span>
+        RequestContext.setRequestId(requestId);
+        res.setHeader(HEADER, requestId);                            <span class="c">// trả về cho client đối soát</span>
+        <span class="k">try</span> {
+            chain.doFilter(req, res);
+        } <span class="k">finally</span> {
+            RequestContext.clear();                                  <span class="c">// BẮT BUỘC</span>
+        }
+    }
+}</pre>
+
+<h4>Bước 3: Annotation khai báo</h4>
+<pre><span class="a">@Target</span>(ElementType.METHOD) <span class="a">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="k">public</span> <span class="a">@interface</span> Audited {
+    String action();
+    <span class="k">boolean</span> logResult() <span class="k">default false</span>;
+}
+
+<span class="a">@Target</span>(ElementType.PARAMETER) <span class="a">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="k">public</span> <span class="a">@interface</span> Sensitive { }   <span class="c">// tham số được che thành "***"</span></pre>
+
+<h4>Bước 4: Aspect audit</h4>
+<p class="path"><code>02-audit-requestid/…/aspect/AuditAspect.java</code></p>
+<pre><span class="a">@Aspect</span> <span class="a">@Component</span>
+<span class="a">@Order</span>(Ordered.HIGHEST_PRECEDENCE + 10)
+<span class="k">public class</span> AuditAspect {
+
+    <span class="a">@Around</span>(<span class="s">"@annotation(audited)"</span>)
+    <span class="k">public</span> Object audit(ProceedingJoinPoint pjp, Audited audited) <span class="k">throws</span> Throwable {
+        MethodSignature sig = (MethodSignature) pjp.getSignature();
+        String requestId = currentRequestId();                    <span class="c">// đọc từ ThreadLocal, KHÔNG từ tham số</span>
+        String arguments = describeArguments(sig.getMethod(), pjp.getArgs());  <span class="c">// che @Sensitive</span>
+        <span class="k">long</span> start = System.nanoTime();
+        <span class="k">try</span> {
+            Object result = pjp.proceed();
+            write(<span class="k">new</span> AuditRecord(requestId, audited.action(), ..., SUCCESS, ...));
+            <span class="k">return</span> result;
+        } <span class="k">catch</span> (Throwable ex) {
+            write(<span class="k">new</span> AuditRecord(requestId, audited.action(), ..., FAILURE, ex.getMessage(), ...));
+            <span class="k">throw</span> ex;                                              <span class="c">// không nuốt exception</span>
+        }
+    }
+}</pre>
+
+<h4>Bước 5: Code nghiệp vụ hoàn toàn "sạch"</h4>
+<pre><span class="a">@Audited</span>(action = <span class="s">"TRANSFER"</span>, logResult = <span class="k">true</span>)
+<span class="k">public</span> String transfer(String fromAccount, String toAccount, BigDecimal amount, <span class="a">@Sensitive</span> String otp) {
+    log.info(<span class="s">"Bat dau chuyen tien"</span>);          <span class="c">// dòng log này cũng tự có requestId nhờ MDC</span>
+    accountService.debit(fromAccount, amount);  <span class="c">// @Audited DEBIT</span>
+    accountService.credit(toAccount, amount);   <span class="c">// @Audited CREDIT</span>
+    notificationService.notifyTransfer(fromAccount, toAccount);  <span class="c">// @Async @Audited NOTIFY</span>
+    <span class="k">return</span> <span class="s">"TRANSFERRED "</span> + amount + ...;
+}</pre>
+
+<h4>Bước 6: Mang requestId sang thread @Async</h4>
+<p>ThreadLocal <strong>không</strong> tự đi sang thread khác. Ta dùng <code>TaskDecorator</code> để chụp context trên thread gọi, rồi khôi phục trên thread worker:</p>
+<p class="path"><code>02-audit-requestid/…/config/AsyncConfig.java</code></p>
+<pre><span class="a">@Bean</span>
+<span class="k">public</span> TaskDecorator requestContextTaskDecorator() {
+    <span class="k">return</span> runnable -&gt; {
+        String requestId = RequestContext.getRequestId();          <span class="c">// thread GỌI</span>
+        Map&lt;String, String&gt; mdc = MDC.getCopyOfContextMap();
+        <span class="k">return</span> () -&gt; {                                            <span class="c">// thread WORKER</span>
+            <span class="k">if</span> (mdc != <span class="k">null</span>) MDC.setContextMap(mdc);
+            <span class="k">if</span> (requestId != <span class="k">null</span>) RequestContext.setRequestId(requestId);
+            <span class="k">try</span> { runnable.run(); } <span class="k">finally</span> { RequestContext.clear(); MDC.clear(); }
+        };
+    };
+}</pre>
+
+<h4>Cấu hình log: in requestId vào mọi dòng</h4>
+<pre><span class="c"># application.yml</span>
+logging:
+  pattern:
+    console: <span class="s">"%d{HH:mm:ss.SSS} %-5level [%thread] [requestId=%X{requestId:-N/A}] %logger{20} - %msg%n"</span></pre>
+
+<h4>Chạy thử</h4>
+<pre><span class="c"># Terminal 1</span>
+mvn -pl 02-audit-requestid spring-boot:run
+
+<span class="c"># Terminal 2</span>
+curl -i -X POST localhost:8082/api/transfers \
+  -H 'X-Request-Id: demo-001' -H 'Content-Type: application/json' \
+  -d '{"from":"ACC-001","to":"ACC-002","amount":50,"otp":"123456"}'
+
+curl 'localhost:8082/api/audit-logs?requestId=demo-001'
+curl -i localhost:8082/api/accounts/ACC-001/balance     <span class="c"># không gửi header thì server tự sinh UUID</span></pre>
+<p>Log thật khi chạy (mọi dòng chung một requestId, kể cả dòng trên thread <code>async-1</code>, và OTP đã bị che):</p>
+<pre>INFO [http-nio-8082-exec-3] [requestId=demo-001] TransferService - Bat dau chuyen tien
+INFO [http-nio-8082-exec-3] [requestId=demo-001] AUDIT - action=DEBIT    method=AccountService.debit  status=SUCCESS args={accountId=ACC-001, amount=50}
+INFO [http-nio-8082-exec-3] [requestId=demo-001] AUDIT - action=CREDIT   method=AccountService.credit status=SUCCESS args={accountId=ACC-002, amount=50}
+INFO [http-nio-8082-exec-3] [requestId=demo-001] AUDIT - action=TRANSFER method=TransferService.transfer status=SUCCESS durationMs=5 args={..., amount=50, otp=***}
+INFO [async-1]              [requestId=demo-001] NotificationService - Gui thong bao chuyen tien ACC-001 -&gt; ACC-002
+INFO [async-1]              [requestId=demo-001] AUDIT - action=NOTIFY   method=NotificationService.notifyTransfer status=SUCCESS</pre>
+
+<h4>Test kiểm chứng</h4>
+<p class="path"><code>02-audit-requestid/src/test/java/com/example/aop/audit/AuditRequestIdTest.java</code></p>
+<div class="table-wrap"><table>
+<tr><th>Test</th><th>Chứng minh điều gì</th></tr>
+<tr><td><code>moiHamTrongCungRequestDeuCoCungRequestId_keCaAsync</code></td><td>4 bản ghi TRANSFER/DEBIT/CREDIT/NOTIFY chung một requestId, NOTIFY chạy trên thread <code>async-*</code>, OTP bị che</td></tr>
+<tr><td><code>khongGuiHeaderThiTuSinhRequestId</code></td><td>Server tự sinh UUID và trả lại trong header response</td></tr>
+<tr><td><code>loiNghiepVuVanDuocAuditVaTraRequestIdChoClient</code></td><td>Khi lỗi, cả DEBIT và TRANSFER đều được ghi FAILURE, và body lỗi chứa requestId</td></tr>
+<tr><td><code>contextDuocDonDepSauRequest</code></td><td>Sau request, ThreadLocal đã rỗng (không rò rỉ)</td></tr>
+<tr><td><code>entryPointKhongPhaiHttp_vanGanDuocRequestId</code></td><td>Job hoặc consumer dùng <code>callWithRequestId</code> vẫn có requestId</td></tr>
+<tr><td><code>RequestIdFilterTest.tuChoiHeaderCoTheGayLogInjection</code></td><td>Header chứa CRLF hoặc dài quá 64 ký tự bị thay bằng UUID</td></tr>
+</table></div>
+
+<h4>Lưu ý khi đưa lên production</h4>
+<div class="table-wrap"><table>
+<tr><th>Chủ đề</th><th>Khuyến nghị</th></tr>
+<tr><td>Bảo mật log</td><td>Validate header requestId (chống log injection), che PII và dữ liệu thẻ/OTP/mật khẩu bằng <code>@Sensitive</code> hoặc whitelist field, không log nguyên object request.</td></tr>
+<tr><td>Lưu trữ audit</td><td>Ghi bất đồng bộ (Kafka, outbox pattern) để không làm chậm giao dịch. Bảng audit nên append-only, có retention và phân quyền đọc.</td></tr>
+<tr><td>Fail-open hay fail-closed</td><td>Demo chọn fail-open (lỗi ghi audit không làm hỏng giao dịch). Một số quy định yêu cầu fail-closed, tức không ghi được audit thì từ chối giao dịch.</td></tr>
+<tr><td>Thread pool khác</td><td><code>CompletableFuture.supplyAsync(..)</code> với pool mặc định, <code>ExecutorService</code> tự tạo, hay <code>parallelStream</code> đều <strong>không</strong> truyền context. Hãy dùng executor đã gắn TaskDecorator, hoặc thư viện <code>context-propagation</code> của Micrometer.</td></tr>
+<tr><td>WebFlux / Reactive</td><td>ThreadLocal không dùng được vì một request nhảy qua nhiều thread. Dùng Reactor <code>Context</code> kết hợp <code>Hooks.enableAutomaticContextPropagation()</code>.</td></tr>
+<tr><td>Virtual threads (Java 21)</td><td>ThreadLocal vẫn hoạt động đúng, vì mỗi virtual thread có ThreadLocal riêng. Tương lai có thể chuyển sang <code>ScopedValue</code>.</td></tr>
+<tr><td>Distributed tracing</td><td>Nếu đã dùng Micrometer Tracing / OpenTelemetry thì có sẵn <code>traceId</code> trong MDC và có thể dùng nó làm requestId. Hãy truyền header sang service downstream qua interceptor của RestClient/Feign.</td></tr>
+</table></div>
+</section>
+
+<!-- 6.2 -->
+<section id="perf">
+<h3>6.2 Đo hiệu năng và cảnh báo method chậm</h3>
+<p><strong>Bài toán:</strong> cần biết method nào chậm trên production mà không phải chèn <code>System.nanoTime()</code> vào từng hàm. Ngưỡng mặc định lấy từ cấu hình, và có thể ghi đè cho từng method.</p>
+<p><strong>Giải pháp:</strong> pointcut theo <strong>vị trí</strong> (mọi bean <code>@Service</code> trong package), không cần annotation. <code>@Monitored</code> chỉ dùng để ghi đè ngưỡng.</p>
+<p class="path"><code>03-performance-monitoring/…/aspect/PerformanceAspect.java</code></p>
+<pre><span class="a">@Around</span>(<span class="s">"within(@org.springframework.stereotype.Service *) &amp;&amp; within(com.example.aop.perf.service..*)"</span>)
+<span class="k">public</span> Object measure(ProceedingJoinPoint pjp) <span class="k">throws</span> Throwable {
+    <span class="k">long</span> start = System.nanoTime();
+    <span class="k">try</span> {
+        <span class="k">return</span> pjp.proceed();
+    } <span class="k">finally</span> {
+        <span class="k">long</span> ms = (System.nanoTime() - start) / 1_000_000;
+        <span class="k">long</span> threshold = thresholdOf(signature.getMethod());   <span class="c">// @Monitored hoặc perf.slow-threshold-ms</span>
+        metrics.record(name, ms, ms &gt;= threshold);
+        <span class="k">if</span> (ms &gt;= threshold) log.warn(<span class="s">"SLOW method {} took {} ms"</span>, name, ms);
+    }
+}</pre>
+<pre>mvn -pl 03-performance-monitoring spring-boot:run
+curl localhost:8083/reports/slow ; curl localhost:8083/metrics/methods</pre>
+<div class="callout info"><strong>Thực tế</strong>Thay <code>MethodMetrics</code> bằng Micrometer <code>Timer</code> và export sang Prometheus. Micrometer có sẵn <code>@Timed</code> và <code>TimedAspect</code>, cũng chính là AOP.</div>
+</section>
+
+<!-- 6.3 -->
+<section id="retry">
+<h3>6.3 Retry tự động khi gọi hệ thống ngoài</h3>
+<p><strong>Bài toán:</strong> gọi cổng thanh toán đôi khi bị timeout hoặc 503. Cần retry lỗi tạm thời với backoff tăng dần, nhưng <strong>không</strong> retry lỗi nghiệp vụ (ví dụ thẻ bị khóa).</p>
+<p><strong>Mấu chốt:</strong> <code>ProceedingJoinPoint.proceed()</code> có thể gọi <strong>nhiều lần</strong>.</p>
+<p class="path"><code>04-retry/…/aspect/RetryAspect.java</code></p>
+<pre><span class="a">@Around</span>(<span class="s">"@annotation(retry)"</span>)
+<span class="k">public</span> Object retry(ProceedingJoinPoint pjp, RetryOnFailure retry) <span class="k">throws</span> Throwable {
+    <span class="k">long</span> backoff = retry.backoffMs();
+    <span class="k">for</span> (<span class="k">int</span> attempt = 1; ; attempt++) {
+        <span class="k">try</span> {
+            <span class="k">return</span> pjp.proceed();
+        } <span class="k">catch</span> (Throwable ex) {
+            <span class="k">if</span> (!isRetryable(ex, retry) || attempt &gt;= retry.maxAttempts()) <span class="k">throw</span> ex;
+            Thread.sleep(backoff);
+            backoff *= 2;                                   <span class="c">// exponential backoff</span>
+        }
+    }
+}
+
+<span class="a">@RetryOnFailure</span>(maxAttempts = 3, backoffMs = 50, retryFor = TransientException.<span class="k">class</span>)
+<span class="k">public</span> String charge(String paymentId) { ... }</pre>
+<div class="callout danger"><strong>Cảnh báo: idempotency</strong>Chỉ retry thao tác idempotent, hoặc có idempotency key (ở đây là <code>paymentId</code>). Nếu retry một lệnh trừ tiền không idempotent, khách hàng có thể bị trừ tiền hai lần.</div>
+<div class="callout warn"><strong>Thứ tự với @Transactional</strong>Retry phải bọc <strong>ngoài</strong> transaction (order nhỏ hơn), để mỗi lần thử là một transaction mới. Nếu retry nằm bên trong, transaction đã bị đánh dấu rollback-only và retry trở nên vô nghĩa.</div>
+<p>Test: thành công ở lần thứ 3, hết lượt thử thì ném lại lỗi gốc, lỗi nghiệp vụ chỉ thử 1 lần. Trên production, nên cân nhắc Spring Retry (<code>@Retryable</code>) hoặc Resilience4j (có thêm circuit breaker).</p>
+</section>
+
+<!-- 6.4 -->
+<section id="authz">
+<h3>6.4 Phân quyền bằng annotation</h3>
+<p><strong>Bài toán:</strong> teller được xem hồ sơ vay, chỉ manager được duyệt, toàn bộ <code>AdminService</code> chỉ dành cho admin. Không muốn viết <code>if (!user.hasRole(..))</code> ở mọi hàm.</p>
+<p class="path"><code>05-authorization/…/aspect/AuthorizationAspect.java</code></p>
+<pre><span class="a">@Before</span>(<span class="s">"@annotation(com.example.aop.authz.annotation.RequiresRole) "</span>
+      + <span class="s">"|| @within(com.example.aop.authz.annotation.RequiresRole)"</span>)
+<span class="k">public void</span> checkRole(JoinPoint jp) {
+    RequiresRole required = resolveAnnotation(jp);   <span class="c">// ưu tiên method, sau đó tới class</span>
+    CurrentUser user = UserContext.get();             <span class="c">// lại là pattern ThreadLocal</span>
+    <span class="k">if</span> (user == <span class="k">null</span>) <span class="k">throw new</span> UnauthenticatedException();   <span class="c">// 401</span>
+    <span class="k">if</span> (Arrays.stream(required.value()).noneMatch(user.roles()::contains))
+        <span class="k">throw new</span> AccessDeniedException(...);                  <span class="c">// 403, method không bao giờ chạy</span>
+}
+
+<span class="a">@RequiresRole</span>({<span class="s">"TELLER"</span>, <span class="s">"MANAGER"</span>}) <span class="k">public</span> String viewLoan(String id)    { ... }
+<span class="a">@RequiresRole</span>(<span class="s">"MANAGER"</span>)            <span class="k">public</span> String approveLoan(String id) { ... }</pre>
+<pre>mvn -pl 05-authorization spring-boot:run
+curl -i -X POST localhost:8085/loans/L-1/approve -H 'X-User: teller01' -H 'X-Roles: TELLER'   <span class="c"># 403</span>
+curl -i -X POST localhost:8085/loans/L-1/approve -H 'X-User: mgr01'    -H 'X-Roles: MANAGER'  <span class="c"># 200</span></pre>
+<div class="callout warn"><strong>Chỉ để học cơ chế</strong>Header <code>X-User</code>/<code>X-Roles</code> do client tự gửi, nên <strong>không an toàn</strong>. Trên production hãy dùng Spring Security (JWT/OAuth2) với <code>@PreAuthorize</code>. Bản thân <code>@PreAuthorize</code> cũng được cài đặt bằng AOP (<code>AuthorizationManagerBeforeMethodInterceptor</code>).</div>
+</section>
+
+<!-- 6.5 -->
+<section id="pitfalls">
+<h3>6.5 Lỗi thường gặp: "Sao aspect của tôi không chạy?"</h3>
+<div class="table-wrap"><table>
+<tr><th>Lỗi</th><th>Nguyên nhân</th><th>Demo test</th></tr>
+<tr><td><strong>Self-invocation</strong>: method A gọi <code>this.b()</code>, advice của <code>b()</code> không chạy</td><td><code>this</code> là target, không phải proxy, nên lời gọi không đi qua chuỗi advice. Đây cũng là lý do <code>@Transactional</code> trên method gọi nội bộ "không có tác dụng".</td><td><code>pitfall1_selfInvocationKhongQuaProxy</code></td></tr>
+<tr><td><strong>Method final</strong></td><td>CGLIB không override được method final. Method chạy trên chính object proxy, nơi các field chưa được inject, nên <strong>field = null</strong>.</td><td><code>pitfall2_finalMethod…</code></td></tr>
+<tr><td><strong>Object tạo bằng <code>new</code></strong></td><td>Không phải bean do Spring quản lý nên không có proxy.</td><td><code>pitfall3_objectTaoBangNew…</code></td></tr>
+<tr><td>Method <code>private</code> / <code>static</code></td><td>Proxy không override được.</td><td></td></tr>
+<tr><td>Aspect không phải bean</td><td>Thiếu <code>@Component</code> trên class <code>@Aspect</code>.</td><td></td></tr>
+<tr><td>Lỗi <em>"JoinPointMatch was NOT bound in invocation"</em></td><td>Aspect có binding tham số (<code>@annotation(x)</code>) nhưng đặt <code>@Order(HIGHEST_PRECEDENCE)</code>, nên chạy trước <code>ExposeInvocationInterceptor</code> (order <code>HIGHEST_PRECEDENCE + 1</code>). Lỗi này đã gặp thật khi viết module 04. Cách sửa: dùng <code>HIGHEST_PRECEDENCE + n</code> với n &gt; 1.</td><td>Xem comment trong <code>RetryAspect</code></td></tr>
+</table></div>
+<h4>Ba cách sửa self-invocation</h4>
+<div class="table-wrap"><table>
+<tr><th>Cách</th><th>Code</th><th>Đánh giá</th></tr>
+<tr><td>1. Tự inject chính mình</td><td><code>SelfInjectedInvoiceService(@Lazy SelfInjectedInvoiceService self)</code> rồi gọi <code>self.validate()</code></td><td>Nhanh, nhưng dễ gây hiểu nhầm</td></tr>
+<tr><td>2. <code>AopContext.currentProxy()</code></td><td>Cần <code>@EnableAspectJAutoProxy(exposeProxy = true)</code></td><td>Code bị phụ thuộc vào API của Spring AOP</td></tr>
+<tr><td>3. <strong>Tách bean riêng</strong></td><td><code>RefactoredInvoiceService</code> gọi <code>InvoiceValidator.validate()</code></td><td><strong>Khuyến nghị</strong>: thiết kế rõ ràng, đúng SRP</td></tr>
+</table></div>
+<p class="muted">Demo: <a href="06-pitfalls/src/test/java/com/example/aop/pitfalls/PitfallsTest.java"><code>06-pitfalls/…/PitfallsTest.java</code></a> có 6 test, gồm 3 lỗi và 3 cách sửa.</p>
+</section>
+</section>
+
+<!-- 7 -->
+<section id="thu-tu">
+<h2>7. Thứ tự khi nhiều aspect cùng áp dụng</h2>
+<p>Dùng <code>@Order</code> trên class aspect: <strong>số nhỏ hơn thì ưu tiên cao hơn</strong>, nghĩa là bọc ngoài, chạy trước ở chiều vào và chạy sau ở chiều ra. Gợi ý cho hệ thống nghiệp vụ:</p>
+<pre>Authorization (+50)  →  Retry (+100)  →  Audit  →  @Transactional (LOWEST_PRECEDENCE)  →  method
+     chặn sớm nhất         mỗi lần thử             ghi cả kết quả       transaction trong cùng
+                           = 1 transaction mới     commit/rollback</pre>
+<p>Với <code>@Transactional</code>, có thể đổi order bằng <code>@EnableTransactionManagement(order = ...)</code>. Không đặt <code>@Order</code> thì thứ tự giữa các aspect là <strong>không xác định</strong>.</p>
+</section>
+
+<!-- 8 -->
+<section id="best">
+<h2>8. Best practice và khi nào KHÔNG nên dùng AOP</h2>
+<div class="cols">
+<div class="card">
+<h4>Nên</h4>
+<ul>
+  <li>Dùng pointcut theo <strong>annotation</strong> cho code ứng dụng, để rõ ràng và có chủ đích.</li>
+  <li>Giữ aspect mỏng và nhanh. Việc nặng (ghi DB, gọi mạng) thì làm bất đồng bộ.</li>
+  <li>Luôn <code>return pjp.proceed()</code> và ném lại exception.</li>
+  <li>Đặt <code>@Order</code> rõ ràng khi có nhiều aspect.</li>
+  <li>Dọn ThreadLocal trong <code>finally</code>.</li>
+  <li>Viết test chứng minh aspect thật sự được áp dụng.</li>
+</ul>
+</div>
+<div class="card">
+<h4>Không nên</h4>
+<ul>
+  <li>Đặt logic <strong>nghiệp vụ</strong> vào aspect. Người đọc code sẽ không thấy nó, gây ra "magic".</li>
+  <li>Dùng pointcut quá rộng như <code>execution(* *(..))</code>, vì nó dính cả bean của framework.</li>
+  <li>Thay đổi tham số hoặc kết quả một cách âm thầm trong <code>@Around</code>.</li>
+  <li>Nuốt exception trong aspect audit hoặc log.</li>
+  <li>Dùng AOP cho logic chỉ xuất hiện ở 1–2 chỗ. Khi đó gọi hàm trực tiếp rõ ràng hơn.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- 9 -->
+<section id="aspectj">
+<h2>9. Spring AOP và AspectJ</h2>
+<div class="table-wrap"><table>
+<tr><th></th><th>Spring AOP</th><th>AspectJ</th></tr>
+<tr><td>Cơ chế</td><td>Proxy lúc runtime</td><td>Sửa bytecode (compile-time / load-time weaving)</td></tr>
+<tr><td>Join point</td><td>Chỉ lời gọi method trên bean Spring</td><td>Method, constructor, gán field, static initializer…</td></tr>
+<tr><td>Self-invocation, private, final</td><td>Không intercept được</td><td>Intercept được</td></tr>
+<tr><td>Object tạo bằng <code>new</code></td><td>Không</td><td>Có</td></tr>
+<tr><td>Cấu hình</td><td>Đơn giản, chỉ cần <code>spring-boot-starter-aop</code></td><td>Cần ajc compiler hoặc java agent</td></tr>
+<tr><td>Hiệu năng</td><td>Có chi phí nhỏ cho mỗi lời gọi qua proxy</td><td>Gần như không có chi phí runtime</td></tr>
+<tr><td>Khi nào dùng</td><td>Hơn 90% nhu cầu ứng dụng doanh nghiệp</td><td>Cần intercept ngoài bean Spring, hoặc khi chi phí proxy là vấn đề</td></tr>
+</table></div>
+<p class="muted">Spring AOP dùng <em>cú pháp annotation</em> của AspectJ (<code>@Aspect</code>, <code>@Around</code>…) và thư viện <code>aspectjweaver</code> để parse pointcut, nhưng <strong>không</strong> dùng AspectJ weaver để dệt bytecode.</p>
+</section>
+
+<!-- 10 -->
+<section id="chay">
+<h2>10. Cấu trúc và cách chạy project</h2>
+<pre>pring-aop/
+├── index.html                    <span class="c">← trang này</span>
+├── pom.xml                       <span class="c">← parent (Spring Boot 3.3.5, Java 21)</span>
+├── 01-aop-basics/                <span class="c">advice, pointcut, proxy (console app)</span>
+├── 02-audit-requestid/           <span class="c">★ audit + requestId (port 8082)</span>
+├── 03-performance-monitoring/    <span class="c">đo thời gian, method chậm (port 8083)</span>
+├── 04-retry/                     <span class="c">retry + backoff (port 8084)</span>
+├── 05-authorization/             <span class="c">@RequiresRole (port 8085)</span>
+└── 06-pitfalls/                  <span class="c">self-invocation, final, new + cách sửa</span></pre>
+<pre><span class="c"># Chạy toàn bộ test (26 test)</span>
+mvn test
+
+<span class="c"># Chạy test của một module</span>
+mvn -pl 02-audit-requestid test
+
+<span class="c"># Chạy app của một module</span>
+mvn -pl 02-audit-requestid spring-boot:run
+mvn -pl 01-aop-basics spring-boot:run       <span class="c"># in thứ tự advice ra console</span></pre>
+<p>Yêu cầu: JDK 21 trở lên và Maven 3.9 trở lên. Mọi dữ liệu trong demo (số tài khoản, OTP…) đều là dữ liệu giả.</p>
+</section>
+
+<footer>Spring AOP Handbook · Mỗi bài toán có một module demo chạy được, và toàn bộ code mẫu trên trang được trích từ chính project này.</footer>
+</main>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('themeBtn');
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem('aop-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  btn.addEventListener('click', function () {
+    var current = root.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = current === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('aop-theme', next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>

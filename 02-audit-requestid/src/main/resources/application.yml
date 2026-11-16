@@ -1,0 +1,7 @@
+server:
+  port: 8082
+
+logging:
+  pattern:
+    # %X{requestId} lay tu MDC -> moi dong log deu co requestId, khong can truyen tay
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] [requestId=%X{requestId:-N/A}] %logger{20} - %msg%n"
